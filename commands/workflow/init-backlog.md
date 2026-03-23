@@ -21,6 +21,9 @@ Use Glob to check if `BACKLOG.md` exists at the project root.
 
 Tracking features, bugs, ideas, and TBDs for this project.
 
+## In Progress
+
+
 ## Features
 
 
@@ -38,21 +41,17 @@ Tracking features, bugs, ideas, and TBDs for this project.
 
 Use Glob to check if `CLAUDE.md` exists at the project root.
 
-The instruction to add is:
-
-```
-- When implementing an item from BACKLOG.md, delete that item from the backlog file after the implementation is complete. Do not delete the file's section headings (Features, Bugs, Ideas, TBDs) — only remove the specific item.
-```
-
 - **If CLAUDE.md does not exist**: Create it with this content:
 
 ```markdown
 ## Agent Instructions
 
-- When implementing an item from BACKLOG.md, delete that item from the backlog file after the implementation is complete. Do not delete the file's section headings (Features, Bugs, Ideas, TBDs) — only remove the specific item.
+- When working with BACKLOG.md, follow this workflow:
+  - **Starting work**: Before implementing backlog items, move them from their current section to the "## In Progress" section at the top of the backlog.
+  - **Completing work**: After implementation is complete, remove the item from "## In Progress". Do not delete any section headings (In Progress, Features, Bugs, Ideas, TBDs) — only remove the specific item.
 ```
 
-- **If CLAUDE.md exists**: Read it and check if it already contains a backlog-related instruction (e.g., mentions "BACKLOG.md" in context of deleting/removing items after implementation).
+- **If CLAUDE.md exists**: Read it and check if it already contains a backlog-related instruction (e.g., mentions "BACKLOG.md" in context of deleting/removing items or in-progress workflow).
   - **If the instruction already exists**: Skip — tell the user it's already configured.
   - **If the instruction does not exist**: Look for a `## Agent Instructions` section (or similar like `## Agent Guidelines`).
     - If found, append the instruction as a new bullet under that section.
