@@ -1,6 +1,6 @@
 # claude-config
 
-Shared [Claude Code](https://docs.anthropic.com/en/docs/claude-code) commands and skills. Clone the repo and run the setup script to symlink everything into your `~/.claude/` directory.
+Shared Claude Code commands and skills. Clone the repo and run the setup script to symlink everything into your `~/.claude/` directory.
 
 ## Install
 
@@ -22,13 +22,14 @@ To link a single skill without running the full setup:
 
 ### Commands
 
-| Command                  | Description                                                                    |
-| ------------------------ | ------------------------------------------------------------------------------ |
-| `/workflow:where-we-at`  | Concise project status recap — recent activity, branch state, and open threads |
-| `/workflow:init-backlog` | Initialize a `BACKLOG.md` and configure `CLAUDE.md` with backlog instructions  |
-| `/git:commit`            | Stage and commit changes                                                       |
-| `/git:commit-push`       | Stage, commit, and push to the current branch                                  |
-| `/git:commit-branch-pr`  | Stage, commit, create a feature branch, push, and open a PR                    |
+| Command                     | Description                                                                    |
+| --------------------------- | ------------------------------------------------------------------------------ |
+| `/workflow:where-we-at`     | Concise project status recap — recent activity, branch state, and open threads |
+| `/workflow:init-backlog`    | Initialize a `BACKLOG.md` and configure `CLAUDE.md` with backlog instructions  |
+| `/git:commit`               | Stage and commit changes                                                       |
+| `/git:commit-push`          | Stage, commit, and push to the current branch                                  |
+| `/git:commit-branch-pr`     | Stage, commit, create a feature branch, push, and open a PR                    |
+| `/git:merge-main-then-push` | Merge latest main into current branch, resolve conflicts, and push             |
 
 ### Skills
 

@@ -3,7 +3,7 @@
 # Links all commands and skills from this repo to ~/.claude/
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 
 link_dirs() {

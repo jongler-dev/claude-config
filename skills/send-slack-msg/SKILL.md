@@ -1,6 +1,8 @@
 ---
 name: send-slack-msg
 description: Send Slack messages to users by name with automatic user ID caching. Use when the user asks to send a Slack message, DM, or ping someone on Slack. Triggers on phrases like "send a message to", "DM", "slack message", "tell [name] on slack", "ping [name]". Handles user lookup, caching, and message delivery via Slack MCP tools.
+allowed-tools: Read Write mcp__slack__slack_search_users mcp__slack__slack_send_message
+compatibility: Requires Slack MCP
 ---
 
 # Send Slack Message
@@ -9,13 +11,13 @@ Send Slack messages to users by display name with a persistent user ID cache to 
 
 ## Cache
 
-- **Location**: `~/.claude/cache/slack-users.json`
+- **Location**: `${CLAUDE_PLUGIN_DATA}/slack-users.json`
 - **Format**: `{ "lowercase display name": { "user_id": "U...", "email": "...", "title": "..." } }`
 - Read the cache file at the start. If it doesn't exist, treat as empty `{}`.
 
 ## Workflow
 
-1. **Read cache** from `~/.claude/cache/slack-users.json` (create parent dir if needed)
+1. **Read cache** from `${CLAUDE_PLUGIN_DATA}/slack-users.json`
 2. **Resolve user ID**:
    - Normalize the target name to lowercase
    - If found in cache, use the cached `user_id`
