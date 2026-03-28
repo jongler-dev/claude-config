@@ -7,10 +7,16 @@ Shared [Claude Code](https://docs.anthropic.com/en/docs/claude-code) commands an
 ```bash
 git clone https://github.com/jongler-dev/claude-config.git
 cd claude-config
-./setup.sh
+./scripts/setup.sh
 ```
 
 The setup script creates symlinks from this repo into `~/.claude/commands/` and `~/.claude/skills/`. If a directory already exists at the destination, it's backed up to `<name>.bak/` before linking. Re-running the script is safe — it updates existing symlinks in place.
+
+To link a single skill without running the full setup:
+
+```bash
+./scripts/link-skill.sh <skill-name>
+```
 
 ## What's included
 

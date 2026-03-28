@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Usage: setup.sh
+# Links all commands and skills from this repo to ~/.claude/
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
