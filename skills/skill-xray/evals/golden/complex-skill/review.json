@@ -1,0 +1,50 @@
+{
+  "spec_compliance": [
+    { "rule": "name: 1-64 characters", "status": "pass", "detail": "Name 'csv-analyzer' is 12 characters" },
+    { "rule": "name: lowercase alphanumeric and hyphens only", "status": "pass", "detail": "Name uses valid characters" },
+    { "rule": "description: present and descriptive", "status": "pass", "detail": "Description includes trigger phrases and clear purpose" },
+    { "rule": "SKILL.md: present", "status": "pass", "detail": "SKILL.md exists at the root" },
+    { "rule": "SKILL.md: under 500 lines", "status": "pass", "detail": "SKILL.md is 55 lines" },
+    { "rule": "allowed-tools: declared", "status": "pass", "detail": "allowed-tools lists Read, Bash, Write, Glob" }
+  ],
+  "security_findings": [
+    {
+      "severity": "info",
+      "title": "Properly scoped tools",
+      "detail": "allowed-tools is declared and limits the agent to Read, Bash, Write, and Glob"
+    }
+  ],
+  "best_practices": [
+    {
+      "severity": "info",
+      "title": "Good progressive disclosure",
+      "detail": "Reference docs in references/ directory, script in scripts/ — loaded on demand"
+    },
+    {
+      "severity": "info",
+      "title": "Bundled pre-processor script",
+      "detail": "Deterministic work handled by a Python script rather than LLM reasoning"
+    }
+  ],
+  "judgment_findings": [],
+  "scores": {
+    "structure": 92,
+    "spec_compliance": 95,
+    "security": 90,
+    "quality": 88,
+    "best_practices": 90,
+    "overall": 91
+  },
+  "grade": "A",
+  "grade_assessment": "A well-structured skill with proper progressive disclosure, scoped tools, and clear instructions.",
+  "grade_strengths": [
+    "Properly scoped allowed-tools limits agent capabilities to what is needed.",
+    "Good progressive disclosure with reference docs and bundled scripts.",
+    "Clear step-by-step instructions with error handling guidance.",
+    "Description includes trigger phrases for accurate activation."
+  ],
+  "grade_improvements": [
+    "Directory name does not match the skill name in frontmatter.",
+    "Could include example CSV input and expected report output."
+  ]
+}

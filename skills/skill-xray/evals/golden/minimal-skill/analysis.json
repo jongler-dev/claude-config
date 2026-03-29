@@ -1,0 +1,52 @@
+{
+  "skill_name": "greeting-responder",
+  "skill_path": "/tmp/fixtures/minimal-skill",
+  "git_url": null,
+  "metadata": {
+    "name": "greeting-responder",
+    "description": "Respond to user greetings with a friendly, contextual message. Use when the user says hello, hi, hey, good morning, or similar greetings.",
+    "license": "MIT",
+    "compatibility": null,
+    "allowed_tools": [],
+    "custom_metadata": {}
+  },
+  "file_tree": [
+    {
+      "path": "SKILL.md",
+      "size_bytes": 429,
+      "lines": 17,
+      "type": "skill_definition"
+    }
+  ],
+  "total_lines": 17,
+  "total_files": 1,
+  "tools_used": [],
+  "execution_flow": {
+    "trigger": "User sends a greeting like hello, hi, hey, or good morning",
+    "steps": [
+      { "step": 1, "action": "Detect the greeting type (formal vs casual)", "tools": [], "conditional": false },
+      { "step": 2, "action": "Match the tone in the response", "tools": [], "conditional": false },
+      { "step": 3, "action": "Ask what the user needs help with", "tools": [], "conditional": false }
+    ],
+    "error_handling": "none",
+    "outputs": ["A friendly greeting response matching the user's tone"]
+  },
+  "file_analysis": [
+    {
+      "path": "SKILL.md",
+      "purpose": "Main skill definition with greeting response instructions",
+      "key_sections": ["Steps"],
+      "references_files": [],
+      "loaded_when": "On skill activation"
+    }
+  ],
+  "external_interactions": {
+    "urls": [],
+    "filesystem_paths": [],
+    "external_tools": []
+  },
+  "mermaid_sequence": "sequenceDiagram\n    participant U as User\n    participant C as Claude\n    U->>C: Greeting message\n    C->>C: Detect greeting type\n    C->>C: Match tone\n    C->>U: Friendly response + offer help",
+  "mermaid_flowchart": "flowchart TD\n    A[User sends greeting] --> B{Formal or casual?}\n    B -->|Formal| C[Respond formally]\n    B -->|Casual| D[Respond casually]\n    C --> E[Ask how to help]\n    D --> E",
+  "summary": "A simple greeting skill that detects the tone of user greetings and responds in kind. It matches formal or casual language and follows up by asking how it can assist the user.",
+  "deep_dive": "## Overview\n\nThe greeting-responder skill is a minimal, single-file skill with no external dependencies or tool usage.\n\n## Execution Flow\n\nWhen triggered by a user greeting, the skill follows a three-step process:\n1. Detect whether the greeting is formal or casual\n2. Match the detected tone in the response\n3. Ask the user what they need help with\n\nThere is no error handling, script execution, or external interaction — this is purely a conversational skill."
+}

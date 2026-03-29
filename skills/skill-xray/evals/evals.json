@@ -1,0 +1,71 @@
+{
+  "skill_name": "skill-xray",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "X-ray the skill at evals/fixtures/minimal-skill",
+      "expected_output": "A report.html file with grade A or B, showing a single-file skill with no security issues. The analysis.json should contain correct frontmatter (name: greeting-responder, license: MIT) and the review.json should have no security errors.",
+      "files": [],
+      "expectations": [
+        "analysis.json exists and contains all required keys: skill_name, skill_path, metadata, file_tree, total_lines, total_files, tools_used, execution_flow, file_analysis, external_interactions, mermaid_sequence, mermaid_flowchart, summary, deep_dive",
+        "analysis.json metadata.name equals 'greeting-responder'",
+        "analysis.json total_files equals 1",
+        "analysis.json file_tree contains exactly one entry with path 'SKILL.md'",
+        "review.json exists and contains all required keys: spec_compliance, security_findings, best_practices, scores, grade, grade_assessment, grade_strengths, grade_improvements",
+        "review.json grade is 'A' or 'B'",
+        "review.json security_findings contains no entries with severity 'error'",
+        "review.json scores.overall is 80 or higher",
+        "review.json grade_strengths is a non-empty array",
+        "review.json grade_improvements is an array",
+        "report.html is generated and contains 'greeting-responder'",
+        "report.html contains the grade letter from review.json"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "X-ray the skill at evals/fixtures/complex-skill",
+      "expected_output": "A report.html showing a multi-file skill with scripts, references, and allowed-tools. The analysis should identify all 3 files, the 4 allowed tools, and the 4-step execution flow. Grade should be A or B.",
+      "files": [],
+      "expectations": [
+        "analysis.json exists and contains all required keys",
+        "analysis.json total_files equals 3",
+        "analysis.json file_tree includes paths 'SKILL.md', 'scripts/preprocess.py', and 'references/analysis-guide.md'",
+        "analysis.json metadata.allowed_tools contains Read, Bash, Write, and Glob",
+        "analysis.json execution_flow.steps has 4 entries",
+        "analysis.json tools_used lists at least Read, Bash, and Write",
+        "analysis.json file_analysis has 3 entries with non-empty purpose fields",
+        "analysis.json mermaid_sequence is valid mermaid syntax starting with 'sequenceDiagram'",
+        "analysis.json mermaid_flowchart is valid mermaid syntax starting with 'flowchart'",
+        "review.json grade is 'A' or 'B'",
+        "review.json structural spec checks all pass (name length, charset, description present, SKILL.md present, under 500 lines, allowed-tools declared)",
+        "review.json scores.overall is 80 or higher",
+        "report.html is generated and contains 'csv-analyzer'",
+        "report.html contains tool badges for Read, Bash, Write, Glob",
+        "report.html file tree shows scripts/ and references/ directories"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "X-ray the skill at evals/fixtures/problematic-skill",
+      "expected_output": "A report.html showing a skill with grade D or F, flagging: name too long (93 chars), 2 hardcoded secrets (Anthropic key + AWS key), vague description, no allowed-tools, and destructive rm -rf in deploy.sh.",
+      "files": [],
+      "expectations": [
+        "analysis.json exists and contains all required keys",
+        "analysis.json metadata.name length exceeds 64 characters",
+        "analysis.json total_files equals 2",
+        "analysis.json external_interactions.urls contains 'https://api.example.com/deploy' or similar",
+        "review.json grade is 'D' or 'F'",
+        "review.json scores.overall is below 50",
+        "review.json spec_compliance includes a FAIL for name length exceeding 64 characters",
+        "review.json spec_compliance includes a FAIL for missing or vague description",
+        "review.json security_findings includes at least 2 error-severity findings",
+        "review.json security_findings mentions hardcoded credentials or API keys",
+        "review.json security_findings or best_practices mentions the lack of allowed-tools",
+        "review.json grade_improvements is a non-empty array with at least 3 items",
+        "report.html is generated and contains secret scan alerts (the pre-analyzer detects 2 secrets)",
+        "report.html contains grade-D or grade-F CSS class",
+        "report.html does not contain the raw secret values (they should be redacted)"
+      ]
+    }
+  ]
+}

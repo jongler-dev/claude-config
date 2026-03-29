@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skill X-Ray: {{SKILL_NAME}}</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+{{CSS}}
+</style>
+</head>
+<body>
+
+<div id="top" class="header">
+  <div class="header-left">
+    <div class="header-brand">Skill X-Ray</div>
+    <div class="header-title-row">
+      <div class="header-skill-name">/{{SKILL_NAME}}</div>
+    </div>
+    <div class="header-skill-path">{{HEADER_SOURCE}}</div>
+    <div class="header-date">{{GENERATED_DATE}}</div>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+    <span class="theme-icon-light" style="display:none">&#9790;</span>
+    <span class="theme-icon-dark">&#9728;</span>
+  </button>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('overview', this)">Overview</button>
+  <button class="tab" onclick="switchTab('architecture', this)">Architecture</button>
+  <button class="tab" onclick="switchTab('deep-dive', this)">Deep Dive</button>
+  <button class="tab" onclick="switchTab('review', this)">Review <span class="tab-badge-beta">Beta</span></button>
+</div>
+
+<!-- TAB 1: OVERVIEW -->
+<div id="overview" class="tab-content active">
+
+  <div class="card">
+    <h3>Summary</h3>
+    <div class="prose">
+      <div class="summary-oneliner">{{SUMMARY_ONELINER}}</div>
+      {{OVERVIEW_SUMMARY}}
+      <div class="summary-footer">
+        <a href="#deep-dive" class="btn-link" onclick="switchTab('deep-dive', document.querySelectorAll('.tab')[2])">
+          View File Breakdown &#8594;
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="overview-row">
+    <div class="card">
+      <h3>External Resources</h3>
+      {{EXTERNAL_INTERACTIONS}}
+    </div>
+    <div class="card">
+      <h3>Tools</h3>
+      {{TOOLS_SECTION}}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Folder Structure</h3>
+    {{FILE_TREE}}
+  </div>
+
+</div>
+
+<!-- TAB 2: ARCHITECTURE -->
+<div id="architecture" class="tab-content tab-wide">
+
+  <div class="arch-toggle">
+    <button class="arch-toggle-btn active" onclick="switchSubTab('arch-exec-flow', this)">Execution Flow</button>
+    <button class="arch-toggle-btn" onclick="switchSubTab('arch-sequence', this)">Sequence Diagram</button>
+  </div>
+
+  <div id="arch-exec-flow" class="sub-tab-content active">
+    <p class="diagram-caption">How the skill routes input through its logic, including conditionals and branching paths.</p>
+    <div class="mermaid-container">
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoom(this, -0.15)" title="Zoom out">&#8722;</button>
+        <button class="zoom-btn" onclick="zoom(this, 0.15)" title="Zoom in">&#43;</button>
+        <button class="zoom-btn" onclick="zoomReset(this)" title="Reset zoom">&#8634;</button>
+      </div>
+      <div class="mermaid-inner" data-zoom="1">
+        <pre class="mermaid" data-diagram="flowchart">
+{{MERMAID_FLOWCHART}}
+        </pre>
+      </div>
+    </div>
+  </div>
+
+  <div id="arch-sequence" class="sub-tab-content">
+    <p class="diagram-caption">Interactions between the user, the agent, and tools showing the step-by-step execution order.</p>
+    <div class="mermaid-container">
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoom(this, -0.15)" title="Zoom out">&#8722;</button>
+        <button class="zoom-btn" onclick="zoom(this, 0.15)" title="Zoom in">&#43;</button>
+        <button class="zoom-btn" onclick="zoomReset(this)" title="Reset zoom">&#8634;</button>
+      </div>
+      <div class="mermaid-inner" data-zoom="1">
+        <pre class="mermaid">
+{{MERMAID_SEQUENCE}}
+        </pre>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TAB 3: DEEP DIVE -->
+<div id="deep-dive" class="tab-content">
+
+  {{DESIGN_DECISIONS}}
+
+  <div class="deep-dive-filters" id="fileFilters"></div>
+
+  <div id="fileCards">
+    {{FILE_ANALYSIS_CARDS}}
+  </div>
+
+</div>
+
+<!-- TAB 4: REVIEW -->
+<div id="review" class="tab-content">
+
+  {{SECRET_ALERTS}}
+
+  <div class="review-top">
+    <div class="card">
+      <h3>Assessment</h3>
+      <div class="prose">{{GRADE_ASSESSMENT}}</div>
+    </div>
+    <div class="score-card card">
+      <h3>Score Breakdown</h3>
+      {{SCORE_BARS}}
+      <div class="score-grade-row">
+        <div class="grade {{GRADE_CLASS}}">{{GRADE_LETTER}}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="review-two-col">
+    <div class="card">
+      <h3>Strengths</h3>
+      <div class="prose">{{GRADE_STRENGTHS}}</div>
+    </div>
+    <div class="card">
+      <h3>Areas for Improvement</h3>
+      <div class="prose">{{GRADE_IMPROVEMENTS}}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Action Items</h3>
+      <button class="copy-all-btn" onclick="copyAllFindings()">Copy All</button>
+    </div>
+    {{FINDINGS}}
+  </div>
+
+</div>
+
+<a href="#top" class="back-to-top" id="backToTop" aria-label="Back to top">&#8593;</a>
+
+<div class="footer">
+  Generated by <strong>skill-xray</strong> on {{GENERATED_DATE}}
+</div>
+
+<script>
+{{JS}}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,72 @@
+{
+  "skill_name": "csv-analyzer",
+  "skill_path": "/tmp/fixtures/complex-skill",
+  "git_url": null,
+  "metadata": {
+    "name": "csv-analyzer",
+    "description": "Analyze CSV files and generate summary reports with charts. Use when the user asks to analyze, summarize, or visualize CSV data. Triggers on phrases like \"analyze this CSV\", \"summarize this data\", \"chart this spreadsheet\".",
+    "license": "Apache-2.0",
+    "compatibility": null,
+    "allowed_tools": ["Read", "Bash", "Write", "Glob"],
+    "custom_metadata": { "author": "testuser", "version": "1.0" }
+  },
+  "file_tree": [
+    { "path": "SKILL.md", "size_bytes": 1444, "lines": 55, "type": "skill_definition" },
+    { "path": "references/analysis-guide.md", "size_bytes": 637, "lines": 23, "type": "reference" },
+    { "path": "scripts/preprocess.py", "size_bytes": 1111, "lines": 40, "type": "script" }
+  ],
+  "total_lines": 118,
+  "total_files": 3,
+  "tools_used": [
+    { "tool": "Read", "purpose": "Read reference documentation and CSV files", "scoped": true },
+    { "tool": "Bash", "purpose": "Run preprocess.py script", "scoped": true },
+    { "tool": "Write", "purpose": "Create markdown report output", "scoped": true },
+    { "tool": "Glob", "purpose": "Find files in skill directory", "scoped": true }
+  ],
+  "execution_flow": {
+    "trigger": "User asks to analyze, summarize, or visualize CSV data",
+    "steps": [
+      { "step": 1, "action": "Parse input to determine CSV file path", "tools": [], "conditional": true, "condition": "If path ambiguous, ask user" },
+      { "step": 2, "action": "Run preprocess.py to extract column types and basic stats", "tools": ["Bash"], "conditional": false },
+      { "step": 3, "action": "Read analysis-guide.md for methodology", "tools": ["Read"], "conditional": false },
+      { "step": 4, "action": "Generate markdown report with findings", "tools": ["Write"], "conditional": false }
+    ],
+    "error_handling": "Reports error and stops if CSV is malformed or empty. Flags unknown column types and continues.",
+    "outputs": ["Markdown report at <work-dir>/report.md"]
+  },
+  "file_analysis": [
+    {
+      "path": "SKILL.md",
+      "purpose": "Main skill definition and orchestration instructions for CSV analysis",
+      "key_sections": ["Parse Input", "Pre-process", "Deep Analysis", "Generate Report", "Error Handling"],
+      "references_files": ["scripts/preprocess.py", "references/analysis-guide.md"],
+      "loaded_when": "On skill activation"
+    },
+    {
+      "path": "scripts/preprocess.py",
+      "purpose": "Deterministic CSV pre-processor that extracts column types, null counts, and sample values",
+      "key_sections": [],
+      "references_files": [],
+      "loaded_when": "Step 2 — executed via Bash"
+    },
+    {
+      "path": "references/analysis-guide.md",
+      "purpose": "Reference guide with methodology for analyzing numeric columns, categorical columns, missing values, and correlations",
+      "key_sections": ["Numeric Columns", "Categorical Columns", "Missing Values", "Correlations"],
+      "references_files": [],
+      "loaded_when": "Step 3 — read for analysis methodology"
+    }
+  ],
+  "external_interactions": {
+    "urls": [],
+    "filesystem_paths": [
+      { "path": "<work-dir>/stats.json", "access": "write", "purpose": "Pre-processor output with column statistics" },
+      { "path": "<work-dir>/report.md", "access": "write", "purpose": "Final analysis report" }
+    ],
+    "external_tools": []
+  },
+  "mermaid_sequence": "sequenceDiagram\n    participant U as User\n    participant C as Claude\n    participant B as Bash\n    participant R as Read\n    participant W as Write\n    U->>C: Analyze this CSV\n    C->>C: Parse input path\n    alt Path ambiguous\n        C->>U: Ask for clarification\n        U->>C: Provide path\n    end\n    C->>B: Run preprocess.py\n    B-->>C: stats.json\n    C->>R: Read analysis-guide.md\n    R-->>C: Methodology\n    C->>C: Analyze data\n    C->>W: Write report.md\n    C->>U: Report complete",
+  "mermaid_flowchart": "flowchart TD\n    A[User provides CSV] --> B{Path clear?}\n    B -->|No| C[Ask user]\n    C --> B\n    B -->|Yes| D[Run preprocess.py]\n    D --> E{CSV valid?}\n    E -->|No| F[Report error and stop]\n    E -->|Yes| G[Read analysis-guide.md]\n    G --> H[Analyze data]\n    H --> I[Write report.md]\n    I --> J[Done]",
+  "summary": "A CSV analysis skill that processes spreadsheet data through a deterministic pre-processor and then applies a structured analysis methodology. It produces a markdown report covering distributions, correlations, and missing value patterns. The skill uses progressive disclosure with a reference guide for analysis methodology.",
+  "deep_dive": "## Overview\n\nThe csv-analyzer skill follows a four-step pipeline to analyze CSV data.\n\n## Step-by-Step Flow\n\n### Step 1: Input Parsing\nThe skill first determines the CSV file path from the user's message, asking for clarification if needed.\n\n### Step 2: Pre-processing\nA Python script (`scripts/preprocess.py`) runs deterministic analysis: column detection, null counting, unique value counting, and sample extraction. Output goes to `stats.json`.\n\n### Step 3: Deep Analysis\nThe skill reads `references/analysis-guide.md` for its analysis methodology, covering numeric distributions, categorical cardinality, missing values, and correlations.\n\n### Step 4: Report Generation\nFinally, a markdown report is written with executive summary, column analysis, key findings, and recommendations.\n\n## Architecture\n\nThe skill demonstrates good progressive disclosure: heavy methodology docs are in `references/`, and the pre-processor is a bundled script. The allowed-tools are properly scoped to Read, Bash, Write, and Glob."
+}

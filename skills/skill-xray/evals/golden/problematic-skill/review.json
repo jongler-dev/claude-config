@@ -1,0 +1,77 @@
+{
+  "spec_compliance": [
+    { "rule": "name: 1-64 characters", "status": "fail", "detail": "Name is 93 characters, exceeds the 64-character limit" },
+    { "rule": "name: lowercase alphanumeric and hyphens only", "status": "pass", "detail": "Name uses valid characters" },
+    { "rule": "description: present and descriptive", "status": "fail", "detail": "Description 'does stuff' is vague and provides no trigger context" },
+    { "rule": "SKILL.md: present", "status": "pass", "detail": "SKILL.md exists at the root" },
+    { "rule": "SKILL.md: under 500 lines", "status": "pass", "detail": "SKILL.md is 28 lines" },
+    { "rule": "allowed-tools: declared", "status": "fail", "detail": "No allowed-tools declared — agent has unrestricted tool access" }
+  ],
+  "security_findings": [
+    {
+      "severity": "error",
+      "title": "Hardcoded Anthropic API key",
+      "detail": "SKILL.md line 11 contains what appears to be an Anthropic API key in a curl command"
+    },
+    {
+      "severity": "error",
+      "title": "Hardcoded AWS credentials",
+      "detail": "SKILL.md line 19 contains an AWS Access Key ID set as an environment variable"
+    },
+    {
+      "severity": "error",
+      "title": "Destructive command in deploy script",
+      "detail": "scripts/deploy.sh contains 'rm -rf /' which would delete the entire filesystem"
+    },
+    {
+      "severity": "error",
+      "title": "Unrestricted Bash access",
+      "detail": "No allowed-tools declaration means the agent can run arbitrary commands"
+    },
+    {
+      "severity": "warning",
+      "title": "External API access",
+      "detail": "Skill makes HTTP requests to api.example.com without documenting the trust relationship"
+    }
+  ],
+  "best_practices": [
+    {
+      "severity": "warning",
+      "title": "Vague description",
+      "detail": "Description 'does stuff' provides no context for when to trigger the skill"
+    },
+    {
+      "severity": "warning",
+      "title": "No error handling beyond retry",
+      "detail": "The only error handling advice is 'try running it again'"
+    }
+  ],
+  "judgment_findings": [
+    {
+      "severity": "error",
+      "title": "Skill poses serious security risk",
+      "detail": "The combination of hardcoded secrets, destructive commands, and unrestricted tool access makes this skill dangerous to use"
+    }
+  ],
+  "scores": {
+    "structure": 40,
+    "spec_compliance": 30,
+    "security": 10,
+    "quality": 25,
+    "best_practices": 20,
+    "overall": 25
+  },
+  "grade": "F",
+  "grade_assessment": "This skill has critical security vulnerabilities including hardcoded secrets and destructive commands, combined with specification violations.",
+  "grade_strengths": [
+    "Has a scripts directory for executable code.",
+    "SKILL.md is concise and under 500 lines."
+  ],
+  "grade_improvements": [
+    "Remove all hardcoded credentials and use environment variables or secrets management.",
+    "Remove the destructive 'rm -rf /' command from deploy.sh.",
+    "Add allowed-tools to restrict agent capabilities.",
+    "Rewrite the description to explain when and why to use this skill.",
+    "Shorten the name to under 64 characters."
+  ]
+}

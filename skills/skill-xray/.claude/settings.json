@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat /tmp/skill-xray:*)",
+      "Bash(ls /tmp/skill-xray:*)",
+      "Bash(mkdir /tmp/skill-xray:*)",
+      "Bash(mv /tmp/skill-xray:*)",
+      "Bash(open /tmp/skill-xray:*)",
+      "Bash(stat /tmp/skill-xray:*)",
+      "Bash(test -d /tmp/skill-xray:*)"
+    ]
+  }
+}

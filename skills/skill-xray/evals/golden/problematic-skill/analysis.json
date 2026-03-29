@@ -1,0 +1,58 @@
+{
+  "skill_name": "problematic-skill",
+  "skill_path": "/tmp/fixtures/problematic-skill",
+  "git_url": null,
+  "metadata": {
+    "name": "this-is-a-really-really-long-skill-name-that-exceeds-the-sixty-four-character-limit-for-names",
+    "description": "does stuff",
+    "license": null,
+    "compatibility": null,
+    "allowed_tools": [],
+    "custom_metadata": {}
+  },
+  "file_tree": [
+    { "path": "SKILL.md", "size_bytes": 549, "lines": 28, "type": "skill_definition" },
+    { "path": "scripts/deploy.sh", "size_bytes": 181, "lines": 7, "type": "script" }
+  ],
+  "total_lines": 35,
+  "total_files": 2,
+  "tools_used": [
+    { "tool": "Bash", "purpose": "Run deploy script and curl commands", "scoped": false }
+  ],
+  "execution_flow": {
+    "trigger": "User wants to deploy changes",
+    "steps": [
+      { "step": 1, "action": "Set AWS credentials as environment variable", "tools": ["Bash"], "conditional": false },
+      { "step": 2, "action": "Run deploy.sh script", "tools": ["Bash"], "conditional": false }
+    ],
+    "error_handling": "Suggests retrying on failure — no structured error handling",
+    "outputs": ["Deployment to production via API call"]
+  },
+  "file_analysis": [
+    {
+      "path": "SKILL.md",
+      "purpose": "Main skill definition with deployment instructions containing hardcoded credentials",
+      "key_sections": ["Usage"],
+      "references_files": ["scripts/deploy.sh"],
+      "loaded_when": "On skill activation"
+    },
+    {
+      "path": "scripts/deploy.sh",
+      "purpose": "Deployment script that calls an external API via curl",
+      "key_sections": [],
+      "references_files": [],
+      "loaded_when": "Step 2 — executed via Bash"
+    }
+  ],
+  "external_interactions": {
+    "urls": ["https://api.example.com/deploy"],
+    "filesystem_paths": [],
+    "external_tools": [
+      { "tool": "curl", "purpose": "POST request to deploy API endpoint" }
+    ]
+  },
+  "mermaid_sequence": "sequenceDiagram\n    participant U as User\n    participant C as Claude\n    participant B as Bash\n    participant API as api.example.com\n    U->>C: Deploy changes\n    C->>B: export AWS_SECRET_ACCESS_KEY\n    C->>B: bash deploy.sh\n    B->>API: POST /deploy\n    API-->>B: Response\n    B-->>C: Output\n    C->>U: Deployment result",
+  "mermaid_flowchart": "flowchart TD\n    A[User requests deploy] --> B[Set AWS credentials]\n    B --> C[Run deploy.sh]\n    C --> D{Success?}\n    D -->|Yes| E[Done]\n    D -->|No| F[Retry]",
+  "summary": "A deployment skill that pushes changes to production via an external API. It contains hardcoded API keys and AWS credentials in the instructions, uses unrestricted Bash access, and has a destructive rm -rf / command in the deploy script.",
+  "deep_dive": "## Overview\n\nThis skill is designed to deploy changes to production but has several critical issues.\n\n## Security Concerns\n\nThe SKILL.md contains hardcoded credentials:\n- An Anthropic API key in a curl command\n- An AWS Secret Access Key set as an environment variable\n\nThe deploy script (`scripts/deploy.sh`) contains `rm -rf /` which is a destructive command.\n\n## Missing Best Practices\n\nThe skill has no allowed-tools declaration, giving the agent unrestricted tool access. The description is vague ('does stuff') and the name exceeds the 64-character limit."
+}

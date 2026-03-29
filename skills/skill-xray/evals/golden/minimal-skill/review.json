@@ -1,0 +1,37 @@
+{
+  "spec_compliance": [
+    { "rule": "name: 1-64 characters", "status": "pass", "detail": "Name 'greeting-responder' is 18 characters" },
+    { "rule": "name: lowercase alphanumeric and hyphens only", "status": "pass", "detail": "Name uses valid characters" },
+    { "rule": "description: present and descriptive", "status": "pass", "detail": "Description clearly explains when to use the skill" },
+    { "rule": "SKILL.md: present", "status": "pass", "detail": "SKILL.md exists at the root" },
+    { "rule": "SKILL.md: under 500 lines", "status": "pass", "detail": "SKILL.md is 17 lines" }
+  ],
+  "security_findings": [],
+  "best_practices": [
+    {
+      "severity": "info",
+      "title": "Simple single-file structure",
+      "detail": "Appropriate for a minimal skill with no complex logic"
+    }
+  ],
+  "judgment_findings": [],
+  "scores": {
+    "structure": 90,
+    "spec_compliance": 95,
+    "security": 100,
+    "quality": 85,
+    "best_practices": 80,
+    "overall": 90
+  },
+  "grade": "A",
+  "grade_assessment": "A well-structured minimal skill that follows the specification correctly with no security concerns.",
+  "grade_strengths": [
+    "Clean, minimal structure appropriate for the skill's simplicity.",
+    "Good description with trigger phrases for accurate activation.",
+    "No security issues — no tool usage, no external access."
+  ],
+  "grade_improvements": [
+    "Could add examples of different greeting types and expected responses.",
+    "Directory name does not match the skill name in frontmatter."
+  ]
+}
