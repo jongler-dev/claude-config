@@ -128,6 +128,52 @@ class PreAnalyzeTests(unittest.TestCase):
         self.assertFalse(data["structural_spec_checks"]["has_allowed_tools"])
         self.assertEqual(data["frontmatter"]["allowed_tools"], [])
 
+    def test_complex_capabilities_detected(self):
+        data = self._run_pre_analyze("complex-skill")
+        caps = data["capabilities"]
+        self.assertTrue(caps["has_shell"])  # Bash in allowed-tools
+        self.assertFalse(caps["has_network"])  # No WebFetch/WebSearch
+        self.assertTrue(caps["has_fs_write"])  # Write in allowed-tools
+        self.assertFalse(caps["has_mcp"])
+        self.assertFalse(caps["has_agents"])
+
+    def test_complex_shell_not_scoped(self):
+        data = self._run_pre_analyze("complex-skill")
+        self.assertFalse(data["capabilities"]["shell_scoped"])  # plain "Bash", no pattern
+
+    def test_minimal_no_capabilities(self):
+        data = self._run_pre_analyze("minimal-skill")
+        caps = data["capabilities"]
+        self.assertFalse(caps["has_shell"])
+        self.assertFalse(caps["has_network"])
+        self.assertFalse(caps["has_fs_write"])
+
+    def test_complex_eval_info(self):
+        data = self._run_pre_analyze("complex-skill")
+        ei = data["eval_info"]
+        self.assertFalse(ei["has_evals"])  # no evals/ dir in complex fixture
+        self.assertEqual(ei["eval_count"], 0)
+        self.assertFalse(ei["has_test_files"])
+
+    def test_minimal_eval_info(self):
+        data = self._run_pre_analyze("minimal-skill")
+        ei = data["eval_info"]
+        self.assertFalse(ei["has_evals"])
+        self.assertEqual(ei["eval_count"], 0)
+
+    def test_secrets_have_context_field(self):
+        """All secret hits should have a 'context' field."""
+        data = self._run_pre_analyze("problematic-skill")
+        for hit in data["secret_scan"]["hits"]:
+            self.assertIn("context", hit)
+
+    def test_problematic_secrets_not_in_test_context(self):
+        """Secrets in SKILL.md (not a test file) should have context 'production'."""
+        data = self._run_pre_analyze("problematic-skill")
+        for hit in data["secret_scan"]["hits"]:
+            if hit["file"] == "SKILL.md":
+                self.assertEqual(hit["context"], "production")
+
 
 class GenerateReportTests(unittest.TestCase):
     """Tests for scripts/generate-report.py using golden analysis/review JSON."""
