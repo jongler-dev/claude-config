@@ -72,7 +72,7 @@ Only produce findings for genuine issues — don't force findings where there ar
 
 ### Phase 4: Grade
 
-Calculate scores (0-100) for each category and an overall grade:
+Calculate scores (0-100) for each category:
 
 - **Structure** (20%): File organization, naming, frontmatter correctness
 - **Spec Compliance** (25%): Adherence to the Agent Skills specification
@@ -80,7 +80,16 @@ Calculate scores (0-100) for each category and an overall grade:
 - **Quality** (20%): Description quality, instructions clarity, examples
 - **Best Practices** (10%): Progressive disclosure, coherence, agentic design
 
-Letter grades: A (90-100), B (80-89), C (70-79), D (60-69), F (<60)
+Compute the weighted overall score, then apply trust modifiers:
+
+- If the skill has evals with 3+ test cases: **+3 points**
+- Else if the skill has evals with 1+ test cases: **+1 point**
+- If the secret scan found secrets (clean=false): **-5 points**
+- If any security finding has severity "error": **-3 points**
+
+Clamp the final score to 0-100. Letter grades: A (90-100), B (80-89), C (70-79), D (60-69), F (<60).
+
+Note: The pre-analysis `file-inventory.json` contains `eval_info.has_evals`, `eval_info.eval_count`, and `secret_scan.clean` — use these for the modifiers.
 
 ### Phase 5: Write Summary
 
