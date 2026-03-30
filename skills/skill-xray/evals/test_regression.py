@@ -262,6 +262,41 @@ class GenerateReportTests(unittest.TestCase):
         self.assertNotIn("FAKE_KEY_FOR_TESTING", html)
         self.assertNotIn("AKIAIOSFODNN7EXAMPLE", html)
 
+    def test_complex_report_has_sidebar(self):
+        html = self._generate_report("complex-skill")
+        self.assertIn("sidebar", html)
+        self.assertIn("About", html)
+
+    def test_complex_report_has_three_tabs(self):
+        html = self._generate_report("complex-skill")
+        self.assertIn("overview", html)
+        self.assertIn("how-it-works", html)
+        self.assertIn("review", html)
+        self.assertNotIn('id="deep-dive"', html)
+
+    def test_complex_report_has_spec_matrix(self):
+        html = self._generate_report("complex-skill")
+        self.assertIn("spec-matrix", html)
+        self.assertIn("spec-chip", html)
+
+    def test_complex_report_has_finding_filters(self):
+        html = self._generate_report("complex-skill")
+        self.assertIn("finding-filter", html)
+
+    def test_complex_report_has_steps_table(self):
+        html = self._generate_report("complex-skill")
+        self.assertIn("steps-table", html)
+
+    def test_complex_report_has_composition(self):
+        html = self._generate_report("complex-skill")
+        self.assertIn("composition-bar", html)
+
+    def test_complex_report_grade_in_header(self):
+        html = self._generate_report("complex-skill")
+        header_end = html.find('class="tabs"')
+        header_html = html[:header_end] if header_end > 0 else html[:500]
+        self.assertIn("grade-", header_html)
+
     def test_report_rejects_invalid_analysis(self):
         """generate-report.py should fail on analysis.json missing required keys."""
         work_dir = os.path.join(self.tmpdir, "bad-analysis")

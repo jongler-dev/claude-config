@@ -425,21 +425,22 @@ def score_color(n):
 def gen_score_bars(review):
     scores = review.get('scores', {})
     categories = [
-        ('Structure', 'structure'),
-        ('Spec Compliance', 'spec_compliance'),
-        ('Security', 'security'),
-        ('Quality', 'quality'),
-        ('Best Practices', 'best_practices'),
-        ('Overall', 'overall'),
+        ('Structure', 'structure', None),
+        ('Spec Compliance', 'spec_compliance', 'spec'),
+        ('Security', 'security', 'security'),
+        ('Quality', 'quality', None),
+        ('Best Practices', 'best_practices', 'best-practice'),
+        ('Overall', 'overall', None),
     ]
     bars = []
-    for label, key in categories:
+    for label, key, source in categories:
         n = scores.get(key, 0)
         color = score_color(n)
         is_overall = key == 'overall'
         cls = 'score-bar score-bar-overall' if is_overall else 'score-bar'
+        source_attr = f' data-source="{source}" onclick="clickScoreBar(\'{source}\',this)"' if source else ''
         bars.append(
-            f'<div class="{cls}">'
+            f'<div class="{cls}"{source_attr}>'
             f'<label>{label}</label>'
             f'<div class="score-track"><div class="score-fill" style="width: {n}%; background: {color}"></div></div>'
             f'<span class="score-value">{n}</span>'
@@ -550,11 +551,15 @@ def gen_secret_alerts(inventory):
 
     for h in hits:
         cat_class = h.get('category', 'unknown')
+        is_test = h.get('context', 'production') == 'test'
+        hit_class = 'secret-hit secret-hit-test' if is_test else 'secret-hit'
+        test_label = '<span class="secret-hit-test-label">test file</span>' if is_test else ''
         out += (
-            f'<div class="secret-hit">'
+            f'<div class="{hit_class}">'
             f'<span class="secret-hit-loc">{html.escape(h["file"])}:{h["line"]}</span>'
             f'<span class="badge secret-cat-{html.escape(cat_class)}">{html.escape(h["label"])}</span>'
             f'<code class="secret-hit-redacted">{html.escape(h["redacted"])}</code>'
+            f'{test_label}'
             f'</div>'
         )
 
@@ -732,6 +737,330 @@ def gen_findings(review):
 
 
 # ---------------------------------------------------------------------------
+# New generators for UX redesign
+# ---------------------------------------------------------------------------
+
+COMPOSITION_COLORS = {
+    'skill_definition': '#60a5fa',
+    'agent_prompt': '#a855f7',
+    'script': '#f59e0b',
+    'reference': '#22c55e',
+    'asset': '#666666',
+    'config': '#666666',
+    'other': '#666666',
+}
+
+COMPOSITION_LABELS = {
+    'skill_definition': 'Skill Definition',
+    'agent_prompt': 'Agents',
+    'script': 'Scripts',
+    'reference': 'References',
+    'asset': 'Assets',
+    'config': 'Config',
+    'other': 'Other',
+}
+
+
+def gen_sidebar(analysis, review, inventory):
+    """Generate the sidebar HTML: About, Capabilities, Stats, Composition, Score."""
+    meta = analysis.get('metadata', {})
+    flow = analysis.get('execution_flow', {})
+    scores = review.get('scores', {})
+    caps = inventory.get('capabilities', {})
+    eval_info = inventory.get('eval_info', {})
+    file_tree = analysis.get('file_tree', [])
+
+    sections = []
+
+    # About
+    trigger = html.escape(flow.get('trigger', ''))
+    outputs_list = flow.get('outputs', [])
+    outputs_str = html.escape(', '.join(outputs_list) if outputs_list else '')
+    license_val = html.escape(meta.get('license') or '\u2014')
+
+    about = '<div class="sidebar-section">'
+    about += '<div class="sidebar-section-title">About</div>'
+    if trigger:
+        about += f'<div class="sidebar-about-trigger">{trigger}</div>'
+    if outputs_str:
+        about += f'<div class="sidebar-meta-row"><span class="sidebar-meta-icon">&#9654;</span><span>Outputs: {outputs_str}</span></div>'
+    about += f'<div class="sidebar-meta-row"><span class="sidebar-meta-icon">&#9881;</span><span>{license_val}</span></div>'
+    about += '</div>'
+    sections.append(about)
+
+    # Capabilities
+    cap_badges = []
+    if caps.get('has_shell'):
+        label = 'Shell (scoped)' if caps.get('shell_scoped') else 'Shell'
+        cap_badges.append(f'<span class="capability-badge capability-badge-shell">{label}</span>')
+    if caps.get('has_network'):
+        cap_badges.append('<span class="capability-badge capability-badge-network">Network</span>')
+    if caps.get('has_fs_write'):
+        cap_badges.append('<span class="capability-badge capability-badge-fs-write">FS Write</span>')
+    if caps.get('has_mcp'):
+        cap_badges.append('<span class="capability-badge capability-badge-mcp">MCP</span>')
+    if caps.get('has_agents'):
+        cap_badges.append('<span class="capability-badge capability-badge-agents">Agents</span>')
+
+    if cap_badges:
+        caps_html = '<div class="sidebar-section">'
+        caps_html += '<div class="sidebar-section-title">Capabilities</div>'
+        caps_html += f'<div class="capability-badges">{" ".join(cap_badges)}</div>'
+        caps_html += '</div>'
+        sections.append(caps_html)
+
+    # Stats
+    total_files = analysis.get('total_files', 0)
+    total_lines = analysis.get('total_lines', 0)
+    stats = '<div class="sidebar-section">'
+    stats += '<div class="sidebar-section-title">Stats</div>'
+    stats += f'<div class="sidebar-stat"><span class="sidebar-meta-icon">&#128196;</span><span><strong>{total_files}</strong> files</span></div>'
+    stats += f'<div class="sidebar-stat"><span class="sidebar-meta-icon">#</span><span><strong>{total_lines}</strong> lines</span></div>'
+    if eval_info.get('has_evals'):
+        count = eval_info.get('eval_count', 0)
+        label = f'{count} evals' if count > 0 else 'evals'
+        stats += f'<div class="sidebar-stat sidebar-stat-evals"><span class="sidebar-meta-icon" style="color:var(--green)">&#10003;</span><span><strong>{label}</strong></span></div>'
+    if eval_info.get('has_test_files'):
+        stats += f'<div class="sidebar-stat"><span class="sidebar-meta-icon">&#128295;</span><span>test files</span></div>'
+    stats += '</div>'
+    sections.append(stats)
+
+    # Composition bar
+    type_lines = {}
+    for f in file_tree:
+        t = f.get('type', 'other')
+        type_lines[t] = type_lines.get(t, 0) + f.get('lines', 0)
+
+    total = sum(type_lines.values()) or 1
+    if type_lines:
+        comp = '<div class="sidebar-section">'
+        comp += '<div class="sidebar-section-title">Composition</div>'
+        comp += '<div class="composition-bar">'
+        for t in ['skill_definition', 'agent_prompt', 'script', 'reference', 'asset', 'config', 'other']:
+            lines = type_lines.get(t, 0)
+            if lines == 0:
+                continue
+            pct = (lines / total) * 100
+            color = COMPOSITION_COLORS.get(t, '#666')
+            label = COMPOSITION_LABELS.get(t, t)
+            comp += f'<div style="width:{pct:.1f}%;background:{color}" title="{label} \u2014 {lines} lines"></div>'
+        comp += '</div>'
+        comp += '<div class="composition-legend">'
+        for t in ['skill_definition', 'agent_prompt', 'script', 'reference', 'asset', 'config', 'other']:
+            lines = type_lines.get(t, 0)
+            if lines == 0:
+                continue
+            color = COMPOSITION_COLORS.get(t, '#666')
+            label = COMPOSITION_LABELS.get(t, t)
+            pct = (lines / total) * 100
+            comp += f'<div class="composition-legend-item"><span class="composition-dot" style="background:{color}"></span>{label} {pct:.0f}%</div>'
+        comp += '</div>'
+        comp += '</div>'
+        sections.append(comp)
+
+    # Mini score bars
+    categories = [
+        ('Security', 'security'),
+        ('Spec', 'spec_compliance'),
+        ('Quality', 'quality'),
+        ('Structure', 'structure'),
+    ]
+    score_html = '<div class="sidebar-section">'
+    score_html += '<div class="sidebar-section-title">Confidence Score</div>'
+    score_html += f'<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem">'
+    score_html += f'<div class="grade {_grade_class(review)}">{review.get("grade", "C")}</div>'
+    score_html += f'<span style="font-size:0.82rem;color:var(--text-secondary)">{scores.get("overall", 0)} / 100</span>'
+    score_html += '</div>'
+    score_html += '<div class="mini-score-bars">'
+    for label, key in categories:
+        n = scores.get(key, 0)
+        color = score_color(n)
+        score_html += f'<div class="mini-score-bar"><label>{label}</label>'
+        score_html += f'<div class="mini-score-track"><div class="mini-score-fill" style="width:{n}%;background:{color}"></div></div>'
+        score_html += f'<span class="mini-score-value">{n}</span></div>'
+    score_html += '</div>'
+    score_html += '<a href="#review" class="sidebar-score-link" onclick="switchTab(\'review\', document.querySelectorAll(\'.tab\')[2])">Full review &#8594;</a>'
+    score_html += '</div>'
+    sections.append(score_html)
+
+    return '\n'.join(sections)
+
+
+def _grade_class(review):
+    return f'grade-{review.get("grade", "C")}'
+
+
+def gen_steps_table(analysis):
+    """Generate the steps table HTML from execution_flow.steps."""
+    steps = analysis.get('execution_flow', {}).get('steps', [])
+    if not steps:
+        return '<p style="color:var(--text-muted);font-size:0.85rem">No execution steps available.</p>'
+
+    rows = []
+    for s in steps:
+        step_num = s.get('step', '')
+        action = html.escape(s.get('action', ''))
+        tools = s.get('tools', [])
+        conditional = s.get('conditional', False)
+        condition = html.escape(s.get('condition', ''))
+
+        tool_badges = ' '.join(
+            f'<span class="badge tool">{html.escape(t)}</span>' for t in tools
+        ) if tools else '<span style="color:var(--text-muted)">\u2014</span>'
+
+        cond_html = f'<span class="step-condition">{condition}</span>' if conditional and condition else '<span style="color:var(--text-muted)">\u2014</span>'
+
+        action_lower = action.lower()
+        is_approval = any(kw in action_lower for kw in ['user confirm', 'user approv', 'user review', 'ask user', 'wait for user', 'user validates'])
+        row_class = ' class="approval-step"' if is_approval else ''
+        dot = '<span class="approval-dot"></span>' if is_approval else ''
+
+        rows.append(
+            f'<tr{row_class}>'
+            f'<td class="step-num">{step_num}</td>'
+            f'<td>{dot}{action}</td>'
+            f'<td>{tool_badges}</td>'
+            f'<td>{cond_html}</td>'
+            f'</tr>'
+        )
+
+    return (
+        '<div class="card"><div style="overflow-x:auto">'
+        '<table class="steps-table">'
+        '<thead><tr><th>#</th><th>Action</th><th>Tools</th><th>Condition</th></tr></thead>'
+        '<tbody>' + '\n'.join(rows) + '</tbody>'
+        '</table></div></div>'
+    )
+
+
+def gen_error_handling(analysis):
+    """Generate error handling callout."""
+    eh = analysis.get('execution_flow', {}).get('error_handling', '')
+    if not eh or eh.lower() == 'none':
+        return ''
+    return (
+        f'<div class="callout-bar">'
+        f'<span class="callout-label">Error Handling</span>'
+        f'<span class="callout-value">{html.escape(eh)}</span>'
+        f'</div>'
+    )
+
+
+def gen_outputs(analysis):
+    """Generate outputs callout."""
+    outputs = analysis.get('execution_flow', {}).get('outputs', [])
+    if not outputs:
+        return ''
+    text = html.escape(', '.join(outputs))
+    return (
+        f'<div class="callout-bar">'
+        f'<span class="callout-label">Outputs</span>'
+        f'<span class="callout-value">{text}</span>'
+        f'</div>'
+    )
+
+
+def gen_spec_matrix(review):
+    """Generate the spec compliance chip matrix."""
+    rules = review.get('spec_compliance', [])
+    if not rules:
+        return '<p style="color:var(--text-muted);font-size:0.85rem">No spec compliance data.</p>'
+
+    applicable = [r for r in rules if r.get('status', '').lower() != 'n/a']
+    passed = sum(1 for r in applicable if r.get('status', '').lower() == 'pass')
+    total_applicable = len(applicable)
+
+    summary = f'<div class="spec-matrix-summary">{passed} of {total_applicable} rules passed</div>'
+
+    fails = [r for r in rules if r.get('status', '').lower() in ('fail',)]
+    warns = [r for r in rules if r.get('status', '').lower() in ('warn', 'warning')]
+    passes = [r for r in rules if r.get('status', '').lower() == 'pass']
+    nas = [r for r in rules if r.get('status', '').lower() == 'n/a']
+
+    chips = []
+    icons = {'fail': '&#10007;', 'warn': '&#9888;', 'pass': '&#10003;', 'n/a': '&#8212;'}
+
+    for r in fails:
+        rule = html.escape(r.get('rule', ''))
+        detail = html.escape(r.get('detail', ''))
+        chips.append(f'<span class="spec-chip spec-chip-fail" title="{detail}">{icons["fail"]} {rule}</span>')
+
+    for r in warns:
+        rule = html.escape(r.get('rule', ''))
+        detail = html.escape(r.get('detail', ''))
+        chips.append(f'<span class="spec-chip spec-chip-warn" title="{detail}">{icons["warn"]} {rule}</span>')
+
+    max_pass_shown = 10 if len(passes) > 15 else len(passes)
+    for r in passes[:max_pass_shown]:
+        rule = html.escape(r.get('rule', ''))
+        detail = html.escape(r.get('detail', ''))
+        chips.append(f'<span class="spec-chip spec-chip-pass" title="{detail}">{icons["pass"]} {rule}</span>')
+    if len(passes) > max_pass_shown:
+        remaining = len(passes) - max_pass_shown
+        chips.append(f'<span class="spec-matrix-overflow">+{remaining} more passed</span>')
+
+    for r in nas:
+        rule = html.escape(r.get('rule', ''))
+        detail = html.escape(r.get('detail', ''))
+        chips.append(f'<span class="spec-chip spec-chip-na" title="{detail}">{icons["n/a"]} {rule}</span>')
+
+    return summary + '<div class="spec-matrix">' + '\n'.join(chips) + '</div>'
+
+
+def gen_finding_filters(review):
+    """Generate the finding filter bar HTML with counts."""
+    findings_data = []
+    _collect_finding_counts(findings_data, review.get('spec_compliance', []), 'spec', status_mode=True)
+    _collect_finding_counts(findings_data, review.get('security_findings', []), 'security')
+    _collect_finding_counts(findings_data, review.get('best_practices', []), 'best-practice')
+    _collect_finding_counts(findings_data, review.get('judgment_findings', []), 'judgment')
+
+    errors = sum(1 for f in findings_data if f['severity'] == 'error')
+    warnings = sum(1 for f in findings_data if f['severity'] == 'warning')
+    total = errors + warnings
+
+    by_source = {}
+    for f in findings_data:
+        by_source[f['source']] = by_source.get(f['source'], 0) + 1
+
+    out = '<div class="finding-filters">'
+
+    out += '<span class="finding-filter-label">Severity</span>'
+    out += f'<button class="finding-filter-btn active" data-axis="severity" data-value="all" onclick="filterFindings(\'severity\',\'all\',this)">All <span class="finding-filter-count">{total}</span></button>'
+    if errors:
+        out += f'<button class="finding-filter-btn" data-axis="severity" data-value="error" onclick="filterFindings(\'severity\',\'error\',this)">Errors <span class="finding-filter-count" style="color:var(--red)">{errors}</span></button>'
+    if warnings:
+        out += f'<button class="finding-filter-btn" data-axis="severity" data-value="warning" onclick="filterFindings(\'severity\',\'warning\',this)">Warnings <span class="finding-filter-count" style="color:var(--yellow)">{warnings}</span></button>'
+
+    out += '<span class="finding-filter-sep">|</span>'
+
+    out += '<span class="finding-filter-label">Source</span>'
+    source_labels = {'spec': 'Spec', 'security': 'Security', 'best-practice': 'Best Practice', 'judgment': 'Judgment'}
+    for src, label in source_labels.items():
+        count = by_source.get(src, 0)
+        if count:
+            out += f'<button class="finding-filter-btn" data-axis="source" data-value="{src}" onclick="filterFindings(\'source\',\'{src}\',this)">{label} <span class="finding-filter-count">{count}</span></button>'
+
+    out += '</div>'
+    return out
+
+
+def _collect_finding_counts(findings, items, source, status_mode=False):
+    """Collect findings for counting (mirrors _add_findings logic but without dedup)."""
+    for item in items:
+        if status_mode:
+            status = item.get('status', '').lower()
+            if status in ('pass', 'n/a'):
+                continue
+            sev = normalize_severity(status)
+        else:
+            sev = normalize_severity(item.get('severity', 'info'))
+            if sev == 'info':
+                continue
+        findings.append({'severity': sev, 'source': source})
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -776,16 +1105,22 @@ def main():
         '{{OVERVIEW_SUMMARY}}': gen_overview_summary(analysis),
         '{{TOOLS_SECTION}}': gen_tools_section(analysis),
         '{{FILE_TREE}}': gen_file_tree(analysis),
+        '{{SIDEBAR}}': gen_sidebar(analysis, review, inventory),
         '{{DESIGN_DECISIONS}}': gen_design_decisions(analysis),
         '{{FILE_ANALYSIS_CARDS}}': gen_file_analysis_cards(analysis),
+        '{{STEPS_TABLE}}': gen_steps_table(analysis),
+        '{{ERROR_HANDLING}}': gen_error_handling(analysis),
+        '{{OUTPUTS}}': gen_outputs(analysis),
         '{{MERMAID_SEQUENCE}}': sanitize_mermaid_sequence(analysis.get('mermaid_sequence', '')),
         '{{MERMAID_FLOWCHART}}': sanitize_mermaid_flowchart(analysis.get('mermaid_flowchart', '')),
-        '{{GRADE_CLASS}}': f'grade-{review.get("grade", "C")}',
+        '{{GRADE_CLASS}}': _grade_class(review),
         '{{GRADE_LETTER}}': review.get('grade', 'C'),
         '{{GRADE_ASSESSMENT}}': gen_grade_assessment(review),
         '{{GRADE_STRENGTHS}}': gen_grade_strengths(review),
         '{{GRADE_IMPROVEMENTS}}': gen_grade_improvements(review),
         '{{SCORE_BARS}}': gen_score_bars(review),
+        '{{SPEC_MATRIX}}': gen_spec_matrix(review),
+        '{{FINDING_FILTERS}}': gen_finding_filters(review),
         '{{EXTERNAL_INTERACTIONS}}': gen_external_interactions(analysis),
         '{{SECRET_ALERTS}}': gen_secret_alerts(inventory),
         '{{FINDINGS}}': gen_findings(review),
