@@ -1,8 +1,8 @@
 // Theme
 function toggleTheme() {
-  const html = document.documentElement;
-  const lightIcon = document.querySelector('.theme-icon-light');
-  const darkIcon = document.querySelector('.theme-icon-dark');
+  var html = document.documentElement;
+  var lightIcon = document.querySelector('.theme-icon-light');
+  var darkIcon = document.querySelector('.theme-icon-dark');
   if (html.getAttribute('data-theme') === 'dark') {
     html.removeAttribute('data-theme');
     lightIcon.style.display = '';
@@ -15,7 +15,6 @@ function toggleTheme() {
   initMermaid();
 }
 
-// Default to dark mode always
 document.documentElement.setAttribute('data-theme', 'dark');
 var _lightIcon = document.querySelector('.theme-icon-light');
 var _darkIcon = document.querySelector('.theme-icon-dark');
@@ -24,21 +23,22 @@ if (_darkIcon) _darkIcon.style.display = '';
 
 // Main tabs
 function switchTab(id, btn) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
   if (btn) btn.classList.add('active');
-  if (id === 'architecture') { setTimeout(initMermaid, 50); }
+  if (id === 'how-it-works') { setTimeout(initMermaid, 50); }
 }
 
-// Architecture toggle buttons
+// Sub-tabs (How It Works)
 function switchSubTab(id, btn) {
-  const parent = btn.closest('.tab-content');
-  parent.querySelectorAll('.arch-toggle-btn').forEach(t => t.classList.remove('active'));
-  parent.querySelectorAll('.sub-tab-content').forEach(t => t.classList.remove('active'));
+  var parent = document.getElementById('how-it-works');
+  if (!parent) return;
+  parent.querySelectorAll('.sub-tab-btn').forEach(function(t) { t.classList.remove('active'); });
+  parent.querySelectorAll('.sub-tab-content').forEach(function(t) { t.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
-  // Re-render mermaid diagrams that were hidden when initMermaid last ran
+  // Re-render mermaid for newly visible diagrams
   var tab = document.getElementById(id);
   var mermaids = tab.querySelectorAll('.mermaid');
   if (mermaids.length) {
@@ -52,12 +52,11 @@ function switchSubTab(id, btn) {
   }
 }
 
-// Zoom — scales the SVG/pre inside a wrapper so mermaid-inner can scroll
+// Zoom
 function zoom(btn, delta) {
-  const inner = btn.closest('.mermaid-container').querySelector('.mermaid-inner');
-  const target = inner.querySelector('svg') || inner.querySelector('pre');
+  var inner = btn.closest('.mermaid-container').querySelector('.mermaid-inner');
+  var target = inner.querySelector('svg') || inner.querySelector('pre');
   if (!target) return;
-  // Wrap target in a zoom-wrapper on first zoom
   var wrapper = inner.querySelector('.zoom-wrapper');
   if (!wrapper) {
     wrapper = document.createElement('div');
@@ -67,7 +66,7 @@ function zoom(btn, delta) {
     target.parentNode.insertBefore(wrapper, target);
     wrapper.appendChild(target);
   }
-  let z = parseFloat(inner.dataset.zoom || 1) + delta;
+  var z = parseFloat(inner.dataset.zoom || 1) + delta;
   z = Math.max(0.3, Math.min(3, z));
   inner.dataset.zoom = z;
   target.style.transform = 'scale(' + z + ')';
@@ -77,52 +76,122 @@ function zoom(btn, delta) {
 }
 
 function zoomReset(btn) {
-  const inner = btn.closest('.mermaid-container').querySelector('.mermaid-inner');
+  var inner = btn.closest('.mermaid-container').querySelector('.mermaid-inner');
   var wrapper = inner.querySelector('.zoom-wrapper');
   var target = wrapper ? wrapper.querySelector('svg') || wrapper.querySelector('pre')
                        : inner.querySelector('svg') || inner.querySelector('pre');
   if (!target) return;
   inner.dataset.zoom = 1;
   target.style.transform = 'scale(1)';
-  if (wrapper) {
-    wrapper.style.width = '';
-    wrapper.style.height = '';
-  }
+  if (wrapper) { wrapper.style.width = ''; wrapper.style.height = ''; }
 }
 
 // Copy single finding
 function copyFinding(btn) {
-  const finding = btn.closest('.finding');
-  const severity = finding.querySelector('.severity').textContent;
-  const title = finding.querySelector('strong').textContent;
-  const detail = finding.querySelector('p').textContent;
-  const text = '[' + severity + '] ' + title + '\n' + detail;
-  navigator.clipboard.writeText(text).then(() => {
+  var finding = btn.closest('.finding');
+  var severity = finding.querySelector('.severity').textContent;
+  var title = finding.querySelector('strong').textContent;
+  var detail = finding.querySelector('p').textContent;
+  var text = '[' + severity + '] ' + title + '\n' + detail;
+  navigator.clipboard.writeText(text).then(function() {
     btn.textContent = '\u2713';
-    setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+    setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
   });
 }
 
-// Copy all findings
+// Copy all visible findings
 function copyAllFindings() {
-  const findings = document.querySelectorAll('#review .finding');
-  let text = '';
-  findings.forEach(f => {
-    const severity = f.querySelector('.severity').textContent;
-    const title = f.querySelector('strong').textContent;
-    const detail = f.querySelector('p').textContent;
+  var findings = document.querySelectorAll('#review .finding');
+  var text = '';
+  findings.forEach(function(f) {
+    if (f.style.display === 'none') return;
+    var severity = f.querySelector('.severity').textContent;
+    var title = f.querySelector('strong').textContent;
+    var detail = f.querySelector('p').textContent;
     text += '[' + severity + '] ' + title + '\n' + detail + '\n\n';
   });
-  const btn = document.querySelector('.copy-all-btn');
-  navigator.clipboard.writeText(text.trim()).then(() => {
+  var btn = document.querySelector('.copy-all-btn');
+  navigator.clipboard.writeText(text.trim()).then(function() {
     btn.textContent = 'Copied!';
-    setTimeout(() => { btn.textContent = 'Copy All'; }, 1500);
+    setTimeout(function() { btn.textContent = 'Copy All'; }, 1500);
   });
+}
+
+// Finding filters — dual axis (severity + source)
+var _activeSeverity = 'all';
+var _activeSource = 'all';
+
+function filterFindings(axis, value, btn) {
+  if (axis === 'severity') _activeSeverity = value;
+  if (axis === 'source') _activeSource = value;
+
+  // Update button states
+  var filterBar = document.querySelector('.finding-filters');
+  if (filterBar) {
+    filterBar.querySelectorAll('.finding-filter-btn').forEach(function(b) {
+      var bAxis = b.dataset.axis;
+      var bVal = b.dataset.value;
+      if (bAxis === axis) {
+        b.classList.toggle('active', bVal === value);
+      }
+    });
+  }
+
+  // Clear score bar highlights when source filter changes
+  if (axis === 'source') {
+    document.querySelectorAll('.score-bar[data-source]').forEach(function(bar) {
+      bar.classList.remove('active');
+    });
+  }
+
+  // Apply filter to findings
+  document.querySelectorAll('#review .finding').forEach(function(f) {
+    var sevMatch = _activeSeverity === 'all' || f.classList.contains(_activeSeverity);
+    var srcMatch = _activeSource === 'all' || f.dataset.source === _activeSource;
+    f.style.display = (sevMatch && srcMatch) ? '' : 'none';
+  });
+}
+
+// Score bar click → filter findings by source
+function clickScoreBar(source, btn) {
+  // Toggle: if already active, clear filter
+  var isActive = btn.classList.contains('active');
+  document.querySelectorAll('.score-bar[data-source]').forEach(function(bar) {
+    bar.classList.remove('active');
+  });
+
+  if (isActive) {
+    _activeSource = 'all';
+  } else {
+    btn.classList.add('active');
+    _activeSource = source;
+  }
+
+  // Update source filter buttons to match
+  var filterBar = document.querySelector('.finding-filters');
+  if (filterBar) {
+    filterBar.querySelectorAll('.finding-filter-btn[data-axis="source"]').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.value === _activeSource);
+    });
+  }
+
+  // Apply filter
+  document.querySelectorAll('#review .finding').forEach(function(f) {
+    var sevMatch = _activeSeverity === 'all' || f.classList.contains(_activeSeverity);
+    var srcMatch = _activeSource === 'all' || f.dataset.source === _activeSource;
+    f.style.display = (sevMatch && srcMatch) ? '' : 'none';
+  });
+
+  // Scroll to findings
+  var actionItems = document.querySelector('.finding-filters');
+  if (actionItems && !isActive) {
+    actionItems.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 // Mermaid
 function initMermaid() {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   mermaid.initialize({
     startOnLoad: false,
     theme: isDark ? 'dark' : 'default',
@@ -130,29 +199,25 @@ function initMermaid() {
     flowchart: { htmlLabels: true, fontSize: 10 },
     sequence: { fontSize: 14 }
   });
-  document.querySelectorAll('.mermaid[data-processed]').forEach(el => {
+  document.querySelectorAll('.mermaid[data-processed]').forEach(function(el) {
     el.removeAttribute('data-processed');
     el.innerHTML = el.getAttribute('data-original') || el.innerHTML;
   });
   mermaid.run();
 }
 
-// Store original mermaid source before first render
-document.querySelectorAll('.mermaid').forEach(el => {
+document.querySelectorAll('.mermaid').forEach(function(el) {
   el.setAttribute('data-original', el.innerHTML);
 });
 
-// Back to top visibility
-const btt = document.getElementById('backToTop');
-window.addEventListener('scroll', () => {
-  if (window.scrollY > 300) {
-    btt.classList.add('visible');
-  } else {
-    btt.classList.remove('visible');
-  }
+// Back to top
+var btt = document.getElementById('backToTop');
+window.addEventListener('scroll', function() {
+  if (window.scrollY > 300) { btt.classList.add('visible'); }
+  else { btt.classList.remove('visible'); }
 });
 
-// Deep Dive file type filter
+// File type filters (File Breakdown sub-tab)
 (function initFileFilters() {
   var container = document.getElementById('fileFilters');
   var cards = document.querySelectorAll('#fileCards .file-card');
@@ -167,18 +232,15 @@ window.addEventListener('scroll', () => {
     'other': 'Other'
   };
 
-  // Count cards per type
   var counts = {};
   cards.forEach(function(c) {
     var t = c.dataset.fileType || 'other';
     counts[t] = (counts[t] || 0) + 1;
   });
 
-  // Only show filter bar if there are 2+ types
   var types = Object.keys(counts);
   if (types.length < 2) return;
 
-  // "All" button
   var allBtn = document.createElement('button');
   allBtn.className = 'filter-btn active';
   allBtn.dataset.type = 'all';
@@ -186,7 +248,6 @@ window.addEventListener('scroll', () => {
   allBtn.onclick = function() { filterFiles('all', this); };
   container.appendChild(allBtn);
 
-  // Per-type buttons (in typeLabels order)
   Object.keys(typeLabels).forEach(function(type) {
     if (!counts[type]) return;
     var btn = document.createElement('button');
