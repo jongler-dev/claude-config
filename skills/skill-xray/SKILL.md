@@ -4,14 +4,14 @@ description: >
   Generate a visual HTML report for any Agent Skills skill directory. Use when
   the user wants to analyze, review, visualize, or understand a skill. Triggers
   on phrases like "x-ray this skill", "analyze this skill", "visualize skill",
-  "review skill", "skill report", "skill-xray". Produces a self-contained HTML
-  file with four tabs: Overview, Deep Dive, Architecture diagrams, and
-  Spec/Security Review with a letter grade.
-allowed-tools: Read Glob Grep Bash Agent Write TaskCreate TaskUpdate TaskGet TaskList
+  "review skill", "skill report", "skill-xray". Accepts a local folder path,
+  a GitHub repository URL, or a GitHub PR URL. Produces a self-contained HTML
+  report with Overview, How It Works, and Review tabs with a letter grade.
+allowed-tools: Read Glob Grep Bash Agent Write TaskCreate TaskUpdate TaskGet TaskList AskUserQuestion
 license: MIT
 metadata:
   author: lioram
-  version: "2.0"
+  version: "3.0"
 ---
 
 # Skill X-Ray
@@ -20,7 +20,7 @@ Generate a comprehensive visual report for any Agent Skills skill.
 
 ## Step 1: Parse Input
 
-Determine the input source from the user's message. There are two modes:
+Determine the input source from the user's message. There are three modes:
 
 ### Mode A: Local path (default)
 - If the user provides a local path, use it
@@ -37,7 +37,19 @@ Determine the input source from the user's message. There are two modes:
 - **On failure** (invalid URL, auth error, network issues, no SKILL.md found), the script exits non-zero with an error message on stderr. **Report the error to the user and stop — do not continue the pipeline.**
 - Store the git URL — it will be passed to the agents so the report header shows the GitHub URL instead of a local path
 
-If both a local path and a git URL are provided, prioritize the git URL and print a warning that the local path is being ignored.
+### Mode C: GitHub PR URL
+- If the user provides a GitHub PR URL (contains `/pull/`), run the fetch script:
+  ```bash
+  bash <skill-dir>/scripts/fetch-pr.sh <pr-url> <work-dir>
+  ```
+  Note: `<work-dir>` must already exist — run Step 2 first with a temporary skill name derived from the repo name, then pass it here.
+- The script handles: shallow clone, fetching the PR head ref, checking out the PR branch, locating `SKILL.md`, and writing `pr-metadata.json` to the work directory
+- **Exit code 0**: success — stdout contains the skill directory path
+- **Exit code 1**: error — report to user and stop
+- **Exit code 2**: multiple `SKILL.md` files found — stdout contains all candidate paths (one per line). Use `AskUserQuestion` to ask the user which skill directory to analyze, then use that path.
+- Store the PR URL as the git URL for the report header
+
+If both a local path and a URL are provided, prioritize the URL and print a warning that the local path is being ignored.
 
 ### Extract skill name
 
@@ -71,11 +83,12 @@ Then write a `manifest.json` to the work directory:
   "skill_name": "<skill-name>",
   "work_dir": "<work-dir>",
   "git_url": "<git-url-or-null>",
+  "mode": "local | github | pr",
   "skill_xray_dir": "<absolute-path-to-skill-xray-skill>"
 }
 ```
 
-Write this file using the Write tool. `skill_xray_dir` is the directory containing this SKILL.md.
+Write this file using the Write tool. `skill_xray_dir` is the directory containing this SKILL.md. Set `mode` to `"local"`, `"github"`, or `"pr"` based on the input source. For PR mode, `git_url` should be the PR URL.
 
 ## Step 4: Create Tasks
 

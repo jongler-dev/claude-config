@@ -215,7 +215,11 @@ def gen_header_source(analysis):
     git_url = analysis.get('git_url')
     if git_url:
         escaped = html.escape(git_url)
-        return f'GitHub URL: <a href="{escaped}" target="_blank" rel="noopener">{escaped}</a>'
+        m = re.match(r'https://github\.com/([^/]+/[^/]+)/pull/(\d+)', git_url)
+        if m:
+            label = f'{m.group(1)}#{m.group(2)}'
+            return f'PR: <a href="{escaped}" target="_blank" rel="noopener">{html.escape(label)}</a>'
+        return f'GitHub: <a href="{escaped}" target="_blank" rel="noopener">{escaped}</a>'
     path = html.escape(analysis['skill_path'])
     return f'Local path: <a href="file://{path}" target="_blank">{path}</a>'
 
