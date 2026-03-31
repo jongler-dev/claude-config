@@ -866,7 +866,7 @@ def gen_sidebar(analysis, review, inventory):
         ('Structure', 'structure'),
     ]
     score_html = '<div class="sidebar-section">'
-    score_html += '<div class="sidebar-section-title">Confidence Score</div>'
+    score_html += '<div class="sidebar-section-title">Confidence Score <span class="tab-badge-beta">Beta</span></div>'
     score_html += f'<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem">'
     score_html += f'<div class="grade {_grade_class(review)}">{review.get("grade", "C")}</div>'
     score_html += f'<span style="font-size:0.82rem;color:var(--text-secondary)">{scores.get("overall", 0)} / 100</span>'

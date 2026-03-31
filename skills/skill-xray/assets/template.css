@@ -45,9 +45,8 @@ body {
   background: var(--bg);
   color: var(--text);
   line-height: 1.6;
-  max-width: 960px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 2rem 3rem;
   transition: background 0.2s, color 0.2s;
 }
 
@@ -198,15 +197,9 @@ body {
 .sub-tab-content { display: none; }
 .sub-tab-content.active { display: block; }
 
-/* Wider layout for architecture diagrams — breaks out of body's 960px */
+/* Architecture diagrams fill available width */
 .tab-wide {
-  width: calc(100vw - 3rem);
-  max-width: 1200px;
-  margin-left: calc((960px - min(1200px, 100vw - 3rem)) / 2);
-}
-
-@media (max-width: 960px) {
-  .tab-wide { margin-left: 0; }
+  width: 100%;
 }
 
 .diagram-caption {
