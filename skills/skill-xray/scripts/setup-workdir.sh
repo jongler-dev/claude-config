@@ -14,7 +14,9 @@ if [[ $# -ne 1 ]]; then
 fi
 
 SKILL_NAME="$1"
-WORK_DIR="/tmp/skill-xray/${SKILL_NAME}"
+BASE_DIR="$(python3 -c "import os; print(os.path.realpath('/tmp/skill-xray'))")"
+mkdir -p "$BASE_DIR"
+WORK_DIR="${BASE_DIR}/${SKILL_NAME}"
 
 if [[ -d "$WORK_DIR" ]]; then
   # Get creation timestamp — macOS vs Linux

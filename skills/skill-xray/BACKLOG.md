@@ -1,7 +1,34 @@
 # Skill X-Ray backlog
 
+## Overview
+
+`/skill-xray` is a visual skill analysis tool.
+
+It generates interactive HTML reports from Agent Skills directories with
+architecture diagrams, file analysis, security review, and grading.
+
+## refactoring notes
+
+current feature branch for refactoring: `feat/skill-xray-ux-redesign`
+
+### Branch state (2026-04-11)
+
+Paused mid-refactor. 5 commits on branch implementing the UX redesign:
+
+- 3-tab layout with sidebar, spec matrix, finding filters, steps table
+- JS for sub-tabs, finding filters, score bar interaction
+- CSS for sidebar, capabilities, spec matrix, finding filters
+- Widened layout to 1280px, added BETA pills
+- GitHub PR mode with fetch-pr.sh and 3-mode architecture (local/git/PR)
+
+Uncommitted work at time of pause:
+
+- `settings.json`, `template.css`, `clone-skill.sh`, `pre-analyze.py`, `setup-workdir.sh` — modified
+- `skills/skill-xray/docs/` — new untracked directory
+
 ## todos
 
+0. does the overview tab need to show the yaml description? if not, how will the user assess its validity if not reading through the rest of the info in other tabs?
 1. suggesting to add a box to the overview tab with all user approval steps in the skill, so reviewers can quickly see "are there any user approvals? yes/no, how many, where are they?" without having to read through all the findings.
 2. can we somehow highlight the user approval steps in the flow diagram?
 3. sub-agents tend to fail "silently" - they lack an unknown bash permission and fail. this leads to Claude trying to figure out what to do, this makes the run time much longer.
@@ -37,6 +64,8 @@ The cleanest fix is option 1. Want me to check your current permission settings 
 12. run the skill on itself and see what it finds!
 13. run skill-creator
 14. run's lotan's skill
+15. how do we review a skill that has subagents defined outside the skill dir (in case of shared plugin skills)
+16. how do we review a skill that calls other skills that are not under the same dir?
 
 ---
 

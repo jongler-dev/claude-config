@@ -310,7 +310,7 @@ def parse_frontmatter(text):
 
     # Parse allowed-tools as list
     allowed_tools_raw = fm.get('allowed-tools', '')
-    allowed_tools = [t.strip() for t in allowed_tools_raw.split() if t.strip()]
+    allowed_tools = [t.strip().rstrip(',') for t in allowed_tools_raw.split() if t.strip()]
 
     # Parse metadata block (simple key: value pairs indented under metadata:)
     metadata = {}
