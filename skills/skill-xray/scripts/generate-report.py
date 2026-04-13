@@ -302,54 +302,47 @@ def gen_file_tree(analysis):
     skill_name = analysis.get('skill_name', 'skill')
     files = analysis.get('file_tree', [])
 
-    # Build a nested dict representing the directory tree
-    tree = {}  # dir_name -> list of (filename, size)
-    root_files = []  # (filename, size) for files at the root level
-
+    # Build a nested dict: each node is {'files': [...], 'dirs': {name: node}}
+    root = {'files': [], 'dirs': {}}
     for f in files:
         path = f.get('path', '')
-        size = f.get('size_bytes', 0)
-        if '/' in path:
-            dir_name, file_name = path.split('/', 1)
-            tree.setdefault(dir_name, []).append((file_name, size))
-        else:
-            root_files.append((path, size))
+        parts = path.split('/')
+        node = root
+        for part in parts[:-1]:
+            if part not in node['dirs']:
+                node['dirs'][part] = {'files': [], 'dirs': {}}
+            node = node['dirs'][part]
+        node['files'].append(parts[-1])
 
-    # Build output lines: root files first, then directories
+    def render_node(node, prefix=''):
+        """Render a directory node into ASCII tree lines."""
+        result = []
+        entries = []
+        for fname in node['files']:
+            entries.append(('file', fname))
+        for dname in sorted(node['dirs'].keys()):
+            entries.append(('dir', dname))
+
+        for idx, (kind, name) in enumerate(entries):
+            is_last = idx == len(entries) - 1
+            connector = '└── ' if is_last else '├── '
+            continuation = '    ' if is_last else '│   '
+            if kind == 'dir':
+                result.append(f'{prefix}{connector}{name}/')
+                result.extend(render_node(node['dirs'][name], prefix + continuation))
+            else:
+                result.append(f'{prefix}{connector}{name}')
+        return result
+
     lines = [f'{skill_name}/']
-    entries = []  # (is_dir, name, children_or_size)
-    for name, size in root_files:
-        entries.append((False, name, size))
-    for dir_name in sorted(tree.keys()):
-        entries.append((True, dir_name, tree[dir_name]))
-
-    for idx, entry in enumerate(entries):
-        is_last = idx == len(entries) - 1
-        connector = '└── ' if is_last else '├── '
-        if entry[0]:  # directory
-            dir_name, children = entry[1], entry[2]
-            lines.append(f'{connector}{dir_name}/')
-            child_prefix = '    ' if is_last else '│   '
-            for cidx, (child_name, child_size) in enumerate(children):
-                child_connector = '└── ' if cidx == len(children) - 1 else '├── '
-                lines.append(f'{child_prefix}{child_connector}{child_name}')
-        else:  # file
-            name, size = entry[1], entry[2]
-            lines.append(f'{connector}{name}')
+    lines.extend(render_node(root))
 
     # Build aria-label summary
     total = len(files)
-    dir_count = len(tree)
-    dir_parts = []
-    for name, size in root_files:
-        dir_parts.append(name)
-    for dir_name in sorted(tree.keys()):
-        n = len(tree[dir_name])
-        dir_parts.append(f'{dir_name}/ with {n} file{"s" if n != 1 else ""}')
+    dir_count = len(root['dirs'])
     label = f'File tree: {total} files'
     if dir_count:
-        label += f' in {dir_count} {"directories" if dir_count != 1 else "directory"}'
-    label += ' — ' + ', '.join(dir_parts)
+        label += f' in {dir_count} top-level {"directories" if dir_count != 1 else "directory"}'
 
     return f'<div class="file-tree" role="img" aria-label="{html.escape(label)}">' + '\n'.join(lines) + '</div>'
 
