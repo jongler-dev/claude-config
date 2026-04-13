@@ -9,9 +9,6 @@ description: >
   report with Overview, How It Works, and Review tabs with a letter grade.
 allowed-tools: Read Glob Grep Bash Agent Write TaskCreate TaskUpdate TaskGet TaskList AskUserQuestion
 license: MIT
-metadata:
-  author: lioram
-  version: "3.0"
 ---
 
 # Skill X-Ray

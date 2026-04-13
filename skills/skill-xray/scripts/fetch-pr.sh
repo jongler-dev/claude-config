@@ -87,22 +87,39 @@ json.dump({
   fi
 fi
 
-# Locate SKILL.md — check repo root first
+# Locate SKILL.md — first try the PR's changed files (precise, no depth limit)
+SKILL_PATHS=$(gh pr view "$PR_NUM" --repo "${OWNER}/${REPO}" --json files --jq '.files[].path' 2>/dev/null | grep '/SKILL\.md$' || true)
+if [[ -n "$SKILL_PATHS" ]]; then
+  COUNT=$(echo "$SKILL_PATHS" | wc -l | tr -d ' ')
+  if [[ "$COUNT" -eq 1 ]]; then
+    FULL_PATH="${CLONE_DIR}/${SKILL_PATHS}"
+    if [[ -f "$FULL_PATH" ]]; then
+      echo "$(dirname "$FULL_PATH")"
+      exit 0
+    fi
+  else
+    # Multiple SKILL.md files changed — output all candidates, exit 2
+    while IFS= read -r p; do
+      dirname "${CLONE_DIR}/${p}"
+    done <<< "$SKILL_PATHS"
+    exit 2
+  fi
+fi
+
+# Fallback: search the repo tree
 if [[ -f "$CLONE_DIR/SKILL.md" ]]; then
   echo "$CLONE_DIR"
   exit 0
 fi
 
-# Search up to 2 levels deep
-FOUND=$(find "$CLONE_DIR" -maxdepth 3 -name "SKILL.md" -type f 2>/dev/null)
+FOUND=$(find "$CLONE_DIR" -maxdepth 6 -name "SKILL.md" -type f 2>/dev/null)
 
 if [[ -z "$FOUND" ]]; then
   echo "Error: no SKILL.md found in PR #${PR_NUM} of ${OWNER}/${REPO}" >&2
-  echo "Searched: $CLONE_DIR (root and subdirectories)" >&2
+  echo "Searched: $CLONE_DIR (up to 6 levels deep)" >&2
   exit 1
 fi
 
-# Count results
 COUNT=$(echo "$FOUND" | wc -l | tr -d ' ')
 if [[ "$COUNT" -eq 1 ]]; then
   echo "$(dirname "$FOUND")"
