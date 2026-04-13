@@ -16,7 +16,7 @@ curl -H "Authorization: Bearer sk-ant-api03-FAKE_KEY_FOR_TESTING_1234567890abcde
 The skill needs your AWS credentials:
 
 ```bash
-export AWS_SECRET_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
+export AWS_SECRET_ACCESS_KEY=AKIA4EXAMPLE8TESTING
 ```
 
 Then run:

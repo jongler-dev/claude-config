@@ -45,9 +45,9 @@ body {
   background: var(--bg);
   color: var(--text);
   line-height: 1.6;
-  max-width: 960px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 2rem 3rem;
   transition: background 0.2s, color 0.2s;
 }
 
@@ -198,15 +198,9 @@ body {
 .sub-tab-content { display: none; }
 .sub-tab-content.active { display: block; }
 
-/* Wider layout for architecture diagrams — breaks out of body's 960px */
+/* Architecture diagrams fill available width */
 .tab-wide {
-  width: calc(100vw - 3rem);
-  max-width: 1200px;
-  margin-left: calc((960px - min(1200px, 100vw - 3rem)) / 2);
-}
-
-@media (max-width: 960px) {
-  .tab-wide { margin-left: 0; }
+  width: 100%;
 }
 
 .diagram-caption {
@@ -428,14 +422,6 @@ body {
 .grade-D { background: var(--orange); }
 .grade-F { background: var(--red); }
 
-/* Review layout */
-.review-top {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
 .score-grade-row {
   display: flex;
   justify-content: center;
@@ -449,7 +435,6 @@ body {
   margin-bottom: 1rem;
 }
 
-.review-top > .card,
 .review-two-col > .card {
   margin-bottom: 0;
 }
@@ -880,6 +865,383 @@ body {
 .score-bar-overall .score-track { height: 8px; }
 .score-bar-overall .score-value { font-weight: 600; font-size: 0.9rem; }
 
+/* Overview layout — GitHub-style main + sidebar */
+.overview-layout {
+  display: grid;
+  grid-template-columns: 1fr minmax(250px, 300px);
+  gap: 1.5rem;
+}
+
+.overview-main { min-width: 0; }
+
+/* Sidebar */
+.sidebar-section {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.sidebar-section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-about-trigger {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 0.6rem;
+}
+
+.sidebar-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.sidebar-meta-icon {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  width: 1.2rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Capability badges */
+.capability-badges {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.capability-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+.capability-badge-shell { background: color-mix(in srgb, var(--red) 15%, transparent); color: var(--red); }
+.capability-badge-network { background: color-mix(in srgb, var(--yellow) 15%, transparent); color: var(--yellow); }
+.capability-badge-fs-write { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+.capability-badge-mcp { background: color-mix(in srgb, #a855f7 15%, transparent); color: #a855f7; }
+.capability-badge-agents { background: color-mix(in srgb, #14b8a6 15%, transparent); color: #14b8a6; }
+
+/* Stats row */
+.sidebar-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  margin-bottom: 0.35rem;
+}
+
+.sidebar-stat strong { color: var(--text); }
+
+.sidebar-stat-evals {
+  color: var(--green);
+}
+
+/* Composition bar */
+.composition-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.composition-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.composition-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.composition-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Mini score bars (sidebar) */
+.mini-score-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+}
+
+.mini-score-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mini-score-bar label {
+  color: var(--text-secondary);
+  min-width: 70px;
+}
+
+.mini-score-track {
+  flex: 1;
+  height: 4px;
+  background: var(--bg-secondary);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.mini-score-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.mini-score-value {
+  color: var(--text-secondary);
+  min-width: 20px;
+  text-align: right;
+}
+
+.sidebar-score-link {
+  font-size: 0.75rem;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: none;
+  margin-top: 0.5rem;
+  display: inline-block;
+}
+
+.sidebar-score-link:hover { text-decoration: underline; }
+
+/* Sub-tabs (How It Works) */
+.sub-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.sub-tab-btn {
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sub-tab-btn:hover { color: var(--text); border-color: var(--text-muted); }
+.sub-tab-btn.active { color: var(--accent); background: var(--accent-light); border-color: var(--accent); font-weight: 500; }
+
+/* Steps table */
+.steps-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.steps-table th {
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+
+.steps-table td {
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+.steps-table tr:last-child td { border-bottom: none; }
+
+.steps-table .step-num {
+  color: var(--text-muted);
+  width: 36px;
+}
+
+.steps-table .step-condition {
+  color: var(--yellow);
+  font-size: 0.78rem;
+}
+
+.approval-step {
+  background: color-mix(in srgb, var(--green) 5%, transparent);
+}
+
+.approval-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* Callout bar (error handling, outputs) */
+.callout-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+}
+
+.callout-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.callout-value {
+  font-size: 0.85rem;
+}
+
+/* Spec compliance matrix */
+.spec-matrix {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.spec-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  cursor: default;
+}
+
+.spec-chip-pass { background: color-mix(in srgb, var(--green) 10%, transparent); color: var(--green); }
+.spec-chip-fail { background: color-mix(in srgb, var(--red) 12%, transparent); color: var(--red); font-weight: 500; }
+.spec-chip-warn { background: color-mix(in srgb, var(--yellow) 10%, transparent); color: var(--yellow); }
+.spec-chip-na { background: color-mix(in srgb, var(--text-muted) 8%, transparent); color: var(--text-muted); }
+
+.spec-matrix-overflow {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding: 0.2rem 0.3rem;
+  align-self: center;
+}
+
+.spec-matrix-summary {
+  font-size: 0.78rem;
+  color: var(--green);
+  margin-bottom: 0.6rem;
+}
+
+/* Finding filter bar */
+.finding-filters {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.finding-filter-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-right: 0.15rem;
+}
+
+.finding-filter-sep {
+  color: var(--border);
+  margin: 0 0.25rem;
+}
+
+.finding-filter-btn {
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.finding-filter-btn:hover { color: var(--text); border-color: var(--text-muted); }
+.finding-filter-btn.active { color: var(--accent); background: var(--accent-light); border-color: var(--accent); }
+
+.finding-filter-count { opacity: 0.6; margin-left: 0.15rem; }
+
+/* Review layout — 2/3 + 1/3 for assessment + scores */
+.review-top {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.review-top > .card { margin-bottom: 0; }
+
+/* Clickable score bars */
+.score-bar[data-source] { cursor: pointer; border-radius: 4px; padding: 0.15rem 0.3rem; margin: -0.15rem -0.3rem; transition: background 0.15s; }
+.score-bar[data-source]:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.score-bar[data-source].active { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.score-bar[data-source].active label { color: var(--accent); font-weight: 500; }
+.score-bar[data-source].active .score-value { color: var(--accent); font-weight: 500; }
+
+/* Secret hit test context */
+.secret-hit-test {
+  opacity: 0.5;
+}
+
+.secret-hit-test-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-left: 0.5rem;
+}
+
+/* Grade in header (smaller, inline) */
+.header .grade {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.95rem;
+}
+
 /* Footer */
 .footer {
   margin-top: 3rem;
@@ -890,13 +1252,3 @@ body {
   text-align: center;
 }
 
-/* Responsive */
-@media (max-width: 700px) {
-  .overview-row { grid-template-columns: 1fr; }
-  .review-top { grid-template-columns: 1fr; }
-  .review-two-col { grid-template-columns: 1fr; }
-  .tools-columns { grid-template-columns: 1fr; }
-  .meta-layout { grid-template-columns: 1fr; }
-  .meta-stats-col { flex-direction: row; flex-wrap: wrap; gap: 1rem; }
-  .meta-stat { border-bottom: none; padding-bottom: 0; }
-}

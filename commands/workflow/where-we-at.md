@@ -11,7 +11,7 @@ Give me a concise "manager's summary" of where this project stands. Follow these
 
 IMPORTANT: Each Bash call MUST be a single git command — never chain commands with `&&`, `||`, or `;`. Run each git command as its own separate Bash tool call.
 
-1. **Recent git activity**: Run `git log --oneline -n 5 --no-merges`.
+1. **Recent git activity**: Run `git log --oneline --since="2 weeks ago" --no-merges`. If empty, widen to 4 weeks, then 8 weeks. Note the date range that had activity.
 
 2. **Uncommitted work**: Run `git status` (never use -uall) and `git stash list` as **separate** Bash calls. Note any dirty state or stashed work.
 

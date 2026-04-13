@@ -21,7 +21,9 @@ if [[ -z "$REPO_NAME" ]]; then
   exit 1
 fi
 
-CLONE_DIR="/tmp/skill-xray/${REPO_NAME}-repo"
+XRAY_BASE="$(python3 -c "import os; print(os.path.realpath('/tmp/skill-xray'))")"
+mkdir -p "$XRAY_BASE"
+CLONE_DIR="${XRAY_BASE}/${REPO_NAME}-repo"
 
 # Clean up any previous clone at the same path
 if [[ -d "$CLONE_DIR" ]]; then

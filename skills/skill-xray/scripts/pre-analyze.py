@@ -164,6 +164,42 @@ _HIGH_ENTROPY_PATTERN = re.compile(
 )
 _HIGH_ENTROPY_THRESHOLD = 4.5
 
+_TEST_PATH_PATTERNS = ['evals/', 'tests/', 'test/', 'fixtures/', '__tests__/', 'mocks/']
+_TEST_FILE_PATTERNS = [r'^test_.*\.py$', r'.*_test\.py$', r'.*\.test\..*$', r'.*\.spec\..*$']
+
+_FAKE_SECRET_ALLOWLIST = {
+    'AKIAIOSFODNN7EXAMPLE',
+    'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+}
+_FAKE_SECRET_PREFIXES = ('sk_test_', 'pk_test_')
+_FAKE_SECRET_GENERIC = {'password123', 'changeme', 'secret', 'todo', 'placeholder', 'xxxxx', '12345'}
+
+
+def _is_test_file(relpath):
+    """Check if a file path is in a test/fixture context."""
+    for pat in _TEST_PATH_PATTERNS:
+        if pat in relpath:
+            return True
+    basename = os.path.basename(relpath)
+    for pat in _TEST_FILE_PATTERNS:
+        if re.match(pat, basename):
+            return True
+    return False
+
+
+def _is_fake_secret(value):
+    """Check if a secret value matches known fake/placeholder patterns."""
+    stripped = value.strip().strip('"').strip("'")
+    if stripped in _FAKE_SECRET_ALLOWLIST:
+        return True
+    if stripped.lower().startswith(_FAKE_SECRET_PREFIXES):
+        return True
+    if stripped.lower() in _FAKE_SECRET_GENERIC:
+        return True
+    if len(set(stripped)) <= 2 and len(stripped) > 3:
+        return True
+    return False
+
 
 def scan_secrets(skill_dir, file_tree):
     """Scan all text files for potential secrets. Returns list of hit dicts."""
@@ -194,6 +230,9 @@ def scan_secrets(skill_dir, file_tree):
 
                 secret_val = m.group('secret') if 'secret' in m.groupdict() else m.group(0)
 
+                if _is_fake_secret(secret_val):
+                    continue
+
                 # For generic assignments, skip low-entropy values (placeholders)
                 if det['id'] == 'generic-secret-assignment':
                     if _shannon_entropy(secret_val) < _GENERIC_ENTROPY_THRESHOLD:
@@ -206,12 +245,15 @@ def scan_secrets(skill_dir, file_tree):
                     'category': det['category'],
                     'label': det['label'],
                     'redacted': _redact(secret_val),
+                    'context': 'test' if _is_test_file(relpath) else 'production',
                 })
 
             # High-entropy catch-all (only fires if no named detector already matched this line)
             if not any(h['file'] == relpath and h['line'] == line_num for h in hits):
                 for m in _HIGH_ENTROPY_PATTERN.finditer(line):
                     val = m.group('secret')
+                    if _is_fake_secret(val):
+                        continue
                     if _shannon_entropy(val) >= _HIGH_ENTROPY_THRESHOLD:
                         hits.append({
                             'file': relpath,
@@ -220,6 +262,7 @@ def scan_secrets(skill_dir, file_tree):
                             'category': 'entropy',
                             'label': 'High-Entropy String',
                             'redacted': _redact(val),
+                            'context': 'test' if _is_test_file(relpath) else 'production',
                         })
 
     return hits
@@ -267,7 +310,7 @@ def parse_frontmatter(text):
 
     # Parse allowed-tools as list
     allowed_tools_raw = fm.get('allowed-tools', '')
-    allowed_tools = [t.strip() for t in allowed_tools_raw.split() if t.strip()]
+    allowed_tools = [t.strip().rstrip(',') for t in allowed_tools_raw.split() if t.strip()]
 
     # Parse metadata block (simple key: value pairs indented under metadata:)
     metadata = {}
@@ -369,6 +412,66 @@ def structural_spec_checks(skill_dir, frontmatter, skill_md_lines, dir_name):
     return checks
 
 
+def detect_capabilities(skill_dir, frontmatter, skill_md_body):
+    """Detect capability tags from frontmatter and SKILL.md body."""
+    allowed = frontmatter.get('allowed_tools', [])
+    allowed_str = ' '.join(allowed)
+    body_lower = skill_md_body.lower()
+    combined = (allowed_str + ' ' + skill_md_body).lower()
+
+    has_shell = 'bash' in [t.split('(')[0].lower() for t in allowed] or 'bash' in body_lower
+    shell_scoped = any(
+        t.lower().startswith('bash(') and '(' in t
+        for t in allowed
+    ) if has_shell else False
+
+    has_network = any(kw in combined for kw in ['webfetch', 'websearch', 'curl ', 'curl\n', 'wget '])
+    has_fs_write = 'write' in [t.lower() for t in allowed] or 'write tool' in body_lower
+    has_mcp = any('mcp__' in t or 'mcp_' in t for t in allowed) or 'mcp__' in skill_md_body
+    has_agents = (
+        'agent' in [t.lower() for t in allowed]
+        or os.path.isdir(os.path.join(skill_dir, 'agents'))
+    )
+
+    return {
+        'has_shell': has_shell,
+        'shell_scoped': shell_scoped,
+        'has_network': has_network,
+        'has_fs_write': has_fs_write,
+        'has_mcp': has_mcp,
+        'has_agents': has_agents,
+    }
+
+
+def detect_evals(skill_dir, file_tree):
+    """Detect evaluation infrastructure."""
+    has_evals_dir = os.path.isdir(os.path.join(skill_dir, 'evals'))
+    evals_json_path = os.path.join(skill_dir, 'evals', 'evals.json')
+
+    eval_count = 0
+    if os.path.isfile(evals_json_path):
+        try:
+            with open(evals_json_path) as f:
+                data = json.load(f)
+            if isinstance(data, list):
+                eval_count = len(data)
+            elif isinstance(data, dict) and 'evals' in data:
+                eval_count = len(data['evals'])
+        except Exception:
+            pass
+
+    has_test_files = any(
+        re.match(r'(test_.*\.py|.*_test\.py)$', os.path.basename(f['path']))
+        for f in file_tree
+    )
+
+    return {
+        'has_evals': has_evals_dir or eval_count > 0,
+        'eval_count': eval_count,
+        'has_test_files': has_test_files,
+    }
+
+
 def main():
     if len(sys.argv) != 3:
         print(f'Usage: {sys.argv[0]} <skill-dir> <output-path>', file=sys.stderr)
@@ -453,6 +556,9 @@ def main():
     # Secret scanning
     secret_hits = scan_secrets(skill_dir, file_tree)
 
+    capabilities = detect_capabilities(skill_dir, frontmatter, body)
+    eval_info = detect_evals(skill_dir, file_tree)
+
     result = {
         'file_tree': file_tree,
         'total_lines': total_lines,
@@ -465,6 +571,8 @@ def main():
             'hit_count': len(secret_hits),
             'hits': secret_hits,
         },
+        'capabilities': capabilities,
+        'eval_info': eval_info,
     }
 
     with open(output_path, 'w') as f:
